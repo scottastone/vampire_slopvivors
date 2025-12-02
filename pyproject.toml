@@ -1,0 +1,7 @@
+[project]
+name = "Vampire Slopvivors"
+version = "0.1.0"
+description = "AI Slop version of Vampire Survivors"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["pygame>=2.6.1", "pyinstaller>=6.17.0", "pyyaml>=6.0.3"]

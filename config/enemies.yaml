@@ -1,0 +1,35 @@
+# Config for Enemies
+enemies:
+  - id: bat
+    name: "Bat"
+    hp: 10
+    speed: 2.0
+    damage: 5
+    xp_value: 1
+    width: 32
+    height: 32
+    color: [100, 100, 100]  # Grey
+    sprite: "assets/enemies/bat.png"
+
+  - id: skeleton
+    name: "Skeleton"
+    hp: 25
+    speed: 1.5
+    damage: 10
+    xp_value: 3
+    width: 32
+    height: 48
+    color: [200, 200, 200] # White
+    sprite: "assets/enemies/skeleton.png"
+
+  - id: boss_orc
+    name: "Orc Boss"
+    hp: 500
+    speed: 1.2
+    damage: 20
+    xp_value: 100
+    width: 64
+    height: 64
+    is_boss: true
+    color: [0, 200, 0] # Green
+    sprite: "assets/enemies/orc_boss.png"

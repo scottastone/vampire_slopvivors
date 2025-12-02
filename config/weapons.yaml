@@ -1,0 +1,24 @@
+# Config for Weapons
+weapons:
+  - id: whip
+    name: "Whip"
+    type: "melee" # Creates a hitbox in front of player
+    damage: 10
+    cooldown: 1000 # ms
+    area: [100, 20] # width, height
+    duration: 150 # ms
+    knockback: 5
+    sprite: "assets/weapons/whip.png"
+    color: [255, 0, 0]
+
+  - id: wand
+    name: "Magic Wand"
+    type: "projectile" # Fires a projectile at nearest enemy
+    damage: 8
+    cooldown: 75 # ms
+    speed: 10.0
+    duration: 2000 # ms (lifetime)
+    size: 8 # radius or width/height
+    penetration: 1
+    sprite: "assets/weapons/wand_projectile.png"
+    color: [0, 0, 255]
