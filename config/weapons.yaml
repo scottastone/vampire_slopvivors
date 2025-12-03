@@ -15,7 +15,7 @@ weapons:
     name: "Magic Wand"
     type: "projectile" # Fires a projectile at nearest enemy
     damage: 8
-    cooldown: 75 # ms
+    cooldown: 400 # ms
     speed: 10.0
     duration: 2000 # ms (lifetime)
     size: 8 # radius or width/height

@@ -1,5 +1,5 @@
 [project]
-name = "Vampire Slopvivors"
+name = "Vampire-Slopvivors"
 version = "0.1.0"
 description = "AI Slop version of Vampire Survivors"
 readme = "README.md"
