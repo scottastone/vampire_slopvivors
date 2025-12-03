@@ -2,9 +2,10 @@ import pygame
 from config_loader import ConfigLoader
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos, enemy_id, config_data, player):
+    def __init__(self, pos, enemy_id, config_data, player, entity_manager=None):
         super().__init__()
         self.player = player
+        self.entity_manager = entity_manager
         self.config = config_data
         
         # Load stats
@@ -69,10 +70,32 @@ class Enemy(pygame.sprite.Sprite):
             
         self.pos += final_vector * self.speed
         self.rect.center = self.pos
+        
+        # Ranged Attack Logic
+        if self.config.get('attack_type') == 'ranged' and self.entity_manager:
+            current_time = pygame.time.get_ticks()
+            if not hasattr(self, 'last_attack_time'):
+                self.last_attack_time = 0
+                
+            cooldown = self.config.get('attack_cooldown', 2000)
+            attack_range = self.config.get('attack_range', 300)
+            
+            dist_to_player = self.pos.distance_to(self.player.rect.center)
+            
+            if dist_to_player <= attack_range and current_time - self.last_attack_time > cooldown:
+                self.last_attack_time = current_time
+                self.shoot_projectile()
+
+    def shoot_projectile(self):
+        from projectile import EnemyProjectile
+        proj = EnemyProjectile(self.rect.center, self.player.rect.center, self.config.get('damage', 10))
+        self.entity_manager.all_sprites.add(proj)
+        self.entity_manager.enemy_projectiles_group.add(proj)
 
     def take_damage(self, amount):
         self.hp -= amount
         if self.hp <= 0:
+            self.hp = 0
             self.kill()
             return True # Dead
         return False

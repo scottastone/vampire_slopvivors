@@ -14,6 +14,7 @@ class EntityManager:
         self.all_sprites = pygame.sprite.Group()
         self.enemies_group = pygame.sprite.Group()
         self.projectiles_group = pygame.sprite.Group()
+        self.enemy_projectiles_group = pygame.sprite.Group()
         self.gems_group = pygame.sprite.Group()
         self.chests_group = pygame.sprite.Group()
         self.items_group = pygame.sprite.Group()
@@ -107,6 +108,11 @@ class EntityManager:
                     gem.vacuum()
             elif isinstance(item, Heart):
                 self.player.heal(item.heal_amount)
+
+        # Collision: Player vs Enemy Projectiles
+        proj_hits = pygame.sprite.spritecollide(self.player, self.enemy_projectiles_group, True)
+        for proj in proj_hits:
+            self.player.take_damage(proj.damage)
 
     def check_player_collisions(self):
         # Returns True if player died

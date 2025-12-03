@@ -11,5 +11,7 @@ class GameStats:
         
     def get_time_survived(self):
         # Returns seconds
-        duration = self.end_ticks - self.start_ticks
+        import pygame
+        current = self.end_ticks if self.end_ticks > 0 else pygame.time.get_ticks()
+        duration = current - self.start_ticks
         return duration / 1000.0

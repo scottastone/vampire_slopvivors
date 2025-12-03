@@ -36,6 +36,15 @@ class Player(pygame.sprite.Sprite):
                 return True # Dead
         return False
 
+    def heal(self, amount):
+        old_hp = self.hp
+        self.hp = min(self.max_hp, self.hp + amount)
+        healed = self.hp - old_hp
+        if healed > 0:
+            print(f"Player healed {healed}. HP: {self.hp}")
+            return True
+        return False
+
     def get_input(self):
         self.velocity.x = 0
         self.velocity.y = 0

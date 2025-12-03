@@ -53,6 +53,12 @@ class Spawner:
                 self.spawn_timer = 0
                 self.spawn_enemy(current_wave['enemies'])
                 
+        # Horde Event (Every 60 seconds, spawn 30 enemies)
+        if int(self.game_time) > 0 and int(self.game_time) % 60 == 0:
+             if not hasattr(self, 'last_horde_time') or self.game_time - self.last_horde_time > 5:
+                 self.spawn_horde()
+                 self.last_horde_time = self.game_time
+
         # Boss Spawn (at 5 minutes / 300s)
         if not self.boss_spawned and self.game_time >= 300:
             self.spawn_boss()
@@ -61,6 +67,32 @@ class Spawner:
         # Limit total enemies
         if len(self.enemies_group) >= 500:
             return
+
+    def spawn_horde(self):
+        print("HORDE SPAWNED!")
+        # Spawn 30 enemies in a circle
+        count = 30
+        radius = 500
+        import math
+        
+        # Determine enemy type for horde based on time
+        enemy_id = 'bat'
+        if self.game_time > 120: enemy_id = 'wolf'
+        elif self.game_time > 60: enemy_id = 'goblin'
+        
+        if enemy_id not in self.enemy_configs: return
+        config = self.enemy_configs[enemy_id]
+
+        for i in range(count):
+            angle = (360 / count) * i
+            rad = math.radians(angle)
+            offset_x = math.cos(rad) * radius
+            offset_y = math.sin(rad) * radius
+            spawn_pos = (self.player.rect.centerx + offset_x, self.player.rect.centery + offset_y)
+            
+            enemy = Enemy(spawn_pos, enemy_id, config, self.player, self.entity_manager)
+            self.all_sprites.add(enemy)
+            self.enemies_group.add(enemy)
 
     def spawn_boss(self):
         boss_ids = [k for k, v in self.enemy_configs.items() if v.get('is_boss', False)]
@@ -72,7 +104,7 @@ class Spawner:
         
         spawn_pos = self.get_spawn_pos()
         print(f"Spawning Boss: {enemy_id}")
-        enemy = Enemy(spawn_pos, enemy_id, config, self.player)
+        enemy = Enemy(spawn_pos, enemy_id, config, self.player, self.entity_manager)
         self.all_sprites.add(enemy)
         self.enemies_group.add(enemy)
             
@@ -87,7 +119,7 @@ class Spawner:
         config = self.enemy_configs[enemy_id]
         spawn_pos = self.get_spawn_pos()
             
-        enemy = Enemy(spawn_pos, enemy_id, config, self.player)
+        enemy = Enemy(spawn_pos, enemy_id, config, self.player, self.entity_manager)
         self.all_sprites.add(enemy)
         self.enemies_group.add(enemy)
 

@@ -58,6 +58,39 @@ class Projectile(pygame.sprite.Sprite):
              self.target_enemy = None 
         super().kill()
 
+class EnemyProjectile(pygame.sprite.Sprite):
+    def __init__(self, pos, target_pos, damage=10):
+        super().__init__()
+        self.damage = damage
+        
+        size = 6
+        color = (150, 0, 150) # Purple
+        
+        self.image = pygame.Surface((size*2, size*2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, color, (size, size), size)
+            
+        self.rect = self.image.get_rect(center=pos)
+        self.pos = pygame.math.Vector2(pos)
+        
+        # Movement
+        speed = 4.0
+        direction = pygame.math.Vector2(target_pos) - self.pos
+        if direction.length() > 0:
+            self.velocity = direction.normalize() * speed
+        else:
+            self.velocity = pygame.math.Vector2(1, 0) * speed
+            
+        # Lifetime
+        self.spawn_time = pygame.time.get_ticks()
+        self.duration = 3000
+
+    def update(self):
+        self.pos += self.velocity
+        self.rect.center = self.pos
+        
+        if pygame.time.get_ticks() - self.spawn_time > self.duration:
+            self.kill()
+
 class MeleeHitbox(pygame.sprite.Sprite):
     def __init__(self, player, config):
         super().__init__()
@@ -127,8 +160,6 @@ class AxeProjectile(pygame.sprite.Sprite):
         self.pos += self.velocity
         self.rect.center = self.pos
         
-        # Rotate image for visual flair? (Not implemented for simplicity)
-        
         if pygame.time.get_ticks() - self.spawn_time > self.duration:
             self.kill()
             
@@ -157,22 +188,10 @@ class AuraHitbox(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.center = self.player.rect.center
-        # Aura persists, so no kill check based on duration usually
-        # But we need to handle "ticking" damage. 
-        # Since collision logic is in EntityManager, we might need a way to signal "ready to damage again"
-        # Or EntityManager handles the tick rate?
-        # Let's let EntityManager handle continuous collision, but we need to reset "hit" list?
-        # Actually, standard collision logic hits every frame.
-        # We need a way to only damage every X ms per enemy.
-        # That's complex. For now, let's just let it hit every frame but with low damage? 
-        # No, that's too much.
-        # Alternative: The Aura object itself manages damage? No, EntityManager does.
-        # Let's add a 'tick' property that toggles.
         
         self.tick_timer += 16 # approx 60fps
         if self.tick_timer >= self.tick_rate:
             self.tick_timer = 0
-            # We need to signal to EntityManager that this frame is a "damage frame"
             self.active_damage_frame = True
         else:
             self.active_damage_frame = False

@@ -56,6 +56,31 @@ enemies:
     color: [100, 50, 0] # Dark Brown
     sprite: "assets/enemies/tank_orc.png"
 
+  - id: mage
+    name: "Mage"
+    hp: 30
+    speed: 1.2
+    damage: 10 # Projectile damage
+    xp_value: 8
+    width: 32
+    height: 48
+    color: [100, 0, 100] # Purple
+    sprite: "assets/enemies/mage.png"
+    attack_type: "ranged"
+    attack_range: 300
+    attack_cooldown: 2000
+
+  - id: wolf
+    name: "Wolf"
+    hp: 20
+    speed: 4.0
+    damage: 12
+    xp_value: 4
+    width: 48
+    height: 32
+    color: [150, 150, 150] # Grey
+    sprite: "assets/enemies/wolf.png"
+
   - id: boss_orc
     name: "Orc Boss"
     hp: 1000
