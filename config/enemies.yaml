@@ -22,12 +22,46 @@ enemies:
     color: [200, 200, 200] # White
     sprite: "assets/enemies/skeleton.png"
 
+  - id: goblin
+    name: "Goblin"
+    hp: 15
+    speed: 3.5 # Fast
+    damage: 8
+    xp_value: 2
+    width: 28
+    height: 28
+    color: [50, 200, 50] # Green
+    sprite: "assets/enemies/goblin.png"
+
+  - id: ghost
+    name: "Ghost"
+    hp: 40
+    speed: 1.0
+    damage: 12
+    xp_value: 5
+    width: 32
+    height: 32
+    color: [200, 200, 255, 150] # Transparent Blue
+    sprite: "assets/enemies/ghost.png"
+    type: "ghost" # Passes through enemies
+
+  - id: tank_orc
+    name: "Tank Orc"
+    hp: 150
+    speed: 0.8
+    damage: 25
+    xp_value: 20
+    width: 48
+    height: 48
+    color: [100, 50, 0] # Dark Brown
+    sprite: "assets/enemies/tank_orc.png"
+
   - id: boss_orc
     name: "Orc Boss"
-    hp: 500
+    hp: 1000
     speed: 1.2
-    damage: 20
-    xp_value: 100
+    damage: 30
+    xp_value: 200
     width: 64
     height: 64
     is_boss: true

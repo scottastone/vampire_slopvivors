@@ -3,90 +3,100 @@ import random
 from enemy import Enemy
 
 class Spawner:
-    def __init__(self, config_loader, player, all_sprites, enemies_group):
+    def __init__(self, config_loader, player, entity_manager):
         self.config_loader = config_loader
         self.player = player
-        self.all_sprites = all_sprites
-        self.enemies_group = enemies_group
+        self.entity_manager = entity_manager
+        self.all_sprites = entity_manager.all_sprites
+        self.enemies_group = entity_manager.enemies_group
         
         self.enemy_configs = self.config_loader.load_enemies()
         self.spawn_timer = 0
-        self.spawn_interval = 30 # frames, start with 0.5 sec for more action
-        self.difficulty_timer = 0
+        
+        # Wave Management
+        self.game_time = 0 # seconds
+        self.start_ticks = pygame.time.get_ticks()
         
         # Boss State
         self.boss_spawned = False
         self.boss_timer = 0
-        self.boss_spawn_time = 3600 # 60 seconds (60fps * 60)
+        self.boss_spawn_time = 300 # 5 minutes for boss? Or keep simple
+        
+        # Wave Definitions
+        # (Start Time, End Time, Spawn Interval, [Enemy IDs])
+        self.waves = [
+            {'start': 0, 'end': 60, 'interval': 40, 'enemies': ['bat', 'skeleton']},
+            {'start': 60, 'end': 120, 'interval': 30, 'enemies': ['bat', 'skeleton', 'goblin']},
+            {'start': 120, 'end': 180, 'interval': 20, 'enemies': ['skeleton', 'goblin', 'ghost']},
+            {'start': 180, 'end': 9999, 'interval': 10, 'enemies': ['goblin', 'ghost', 'tank_orc']},
+        ]
         
     def update(self):
-        self.spawn_timer += 1
-        self.difficulty_timer += 1
-        self.boss_timer += 1
+        current_ticks = pygame.time.get_ticks()
+        self.game_time = (current_ticks - self.start_ticks) / 1000.0
         
-        # Increase difficulty (spawn rate) over time
-        if self.difficulty_timer > 300: # Every 5 seconds (faster ramp up)
-            self.difficulty_timer = 0
-            self.spawn_interval = max(5, self.spawn_interval - 2) # Cap at 5 frames (12 enemies/sec)
+        self.spawn_timer += 1
+        
+        # Determine current wave
+        current_wave = None
+        for wave in self.waves:
+            if self.game_time >= wave['start'] and self.game_time < wave['end']:
+                current_wave = wave
+                break
+                
+        if current_wave:
+            interval = current_wave['interval']
+            # Ramp up difficulty within wave?
+            # For now static interval per wave
             
-        # Limit total enemies to prevent lag if Python struggles (e.g. 300)
-        if len(self.enemies_group) >= 300:
-            return
-
-        # Spawn Boss
-        if not self.boss_spawned and self.boss_timer >= self.boss_spawn_time:
+            if self.spawn_timer >= interval:
+                self.spawn_timer = 0
+                self.spawn_enemy(current_wave['enemies'])
+                
+        # Boss Spawn (at 5 minutes / 300s)
+        if not self.boss_spawned and self.game_time >= 300:
             self.spawn_boss()
             self.boss_spawned = True
             
-        if self.spawn_timer >= self.spawn_interval:
-            self.spawn_timer = 0
-            self.spawn_enemy()
+        # Limit total enemies
+        if len(self.enemies_group) >= 500:
+            return
 
     def spawn_boss(self):
         boss_ids = [k for k, v in self.enemy_configs.items() if v.get('is_boss', False)]
         if not boss_ids:
             return
             
-        enemy_id = boss_ids[0] # Pick first boss
+        enemy_id = boss_ids[0] 
         config = self.enemy_configs[enemy_id]
         
-        # Spawn relative to player
-        spawn_radius = 600
-        angle = random.uniform(0, 360)
-        import math
-        rad = math.radians(angle)
-        offset_x = math.cos(rad) * spawn_radius
-        offset_y = math.sin(rad) * spawn_radius
-        spawn_pos = (self.player.rect.centerx + offset_x, self.player.rect.centery + offset_y)
-        
+        spawn_pos = self.get_spawn_pos()
         print(f"Spawning Boss: {enemy_id}")
         enemy = Enemy(spawn_pos, enemy_id, config, self.player)
         self.all_sprites.add(enemy)
         self.enemies_group.add(enemy)
             
-    def spawn_enemy(self):
-        # Pick a random enemy type (weighted could be better, but random for now)
-        # Exclude boss from random spawns initially
-        available_enemies = [k for k, v in self.enemy_configs.items() if not v.get('is_boss', False)]
-        if not available_enemies:
+    def spawn_enemy(self, allowed_enemies):
+        if not allowed_enemies:
             return
             
-        enemy_id = random.choice(available_enemies)
+        enemy_id = random.choice(allowed_enemies)
+        if enemy_id not in self.enemy_configs:
+            return
+            
         config = self.enemy_configs[enemy_id]
-        
-        # Spawn relative to player
-        # Radius should be larger than half screen width (400) -> 500-600
+        spawn_pos = self.get_spawn_pos()
+            
+        enemy = Enemy(spawn_pos, enemy_id, config, self.player)
+        self.all_sprites.add(enemy)
+        self.enemies_group.add(enemy)
+
+    def get_spawn_pos(self):
         spawn_radius = 600
         angle = random.uniform(0, 360)
-        
-        # Calculate offset
         import math
         rad = math.radians(angle)
         offset_x = math.cos(rad) * spawn_radius
         offset_y = math.sin(rad) * spawn_radius
         
-        spawn_pos = (self.player.rect.centerx + offset_x, self.player.rect.centery + offset_y)
-            
-        enemy = Enemy(spawn_pos, enemy_id, config, self.player)
-        self.all_sprites.add(enemy)
-        self.enemies_group.add(enemy)
+        return (self.player.rect.centerx + offset_x, self.player.rect.centery + offset_y)

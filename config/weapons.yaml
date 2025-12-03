@@ -5,9 +5,9 @@ weapons:
     type: "melee" # Creates a hitbox in front of player
     damage: 10
     cooldown: 1000 # ms
-    area: [100, 20] # width, height
+    area: [120, 30] # width, height - Increased range
     duration: 150 # ms
-    knockback: 5
+    knockback: 8
     sprite: "assets/weapons/whip.png"
     color: [255, 0, 0]
 
@@ -15,10 +15,33 @@ weapons:
     name: "Magic Wand"
     type: "projectile" # Fires a projectile at nearest enemy
     damage: 8
-    cooldown: 400 # ms
+    cooldown: 500 # ms
     speed: 10.0
     duration: 2000 # ms (lifetime)
     size: 8 # radius or width/height
     penetration: 1
     sprite: "assets/weapons/wand_projectile.png"
     color: [0, 0, 255]
+
+  - id: axe
+    name: "Axe"
+    type: "axe" # Arcing projectile
+    damage: 15
+    cooldown: 900
+    speed: 12.0 # Initial upward velocity
+    duration: 3000
+    size: 10
+    penetration: 999 # Hits everything in path
+    sprite: "assets/weapons/axe.png"
+    color: [139, 69, 19]
+
+  - id: garlic
+    name: "Garlic"
+    type: "aura" # Area around player
+    damage: 3
+    cooldown: 200 # Tick rate
+    area: [100, 100] # Radius/Size
+    duration: -1 # Infinite
+    knockback: 2
+    sprite: "assets/weapons/garlic.png"
+    color: [255, 255, 200]

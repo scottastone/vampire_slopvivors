@@ -36,7 +36,11 @@ class Enemy(pygame.sprite.Sprite):
         
         # Separation logic (avoid clumping)
         separation_vector = pygame.math.Vector2(0, 0)
-        if enemies_group:
+        
+        # Ghosts ignore separation (or have very low weight) to stack
+        is_ghost = self.config.get('type') == 'ghost'
+        
+        if enemies_group and not is_ghost:
             # Check for collisions with other enemies
             # Using a smaller rect for collision to allow some overlap but push center
             hit_rect = self.rect.inflate(-5, -5)

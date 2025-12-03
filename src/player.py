@@ -19,6 +19,7 @@ class Player(pygame.sprite.Sprite):
         
         # Movement vector
         self.velocity = pygame.math.Vector2(0, 0)
+        self.last_move = pygame.math.Vector2(1, 0) # Default facing right
         
         # Invulnerability
         self.last_hit_time = 0
@@ -66,6 +67,7 @@ class Player(pygame.sprite.Sprite):
 
         if self.velocity.length() > 0:
             self.velocity = self.velocity.normalize() * self.speed
+            self.last_move = self.velocity.copy()
 
     def update(self):
         self.get_input()
