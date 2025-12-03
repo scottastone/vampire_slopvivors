@@ -17,7 +17,7 @@ def build():
     
     args = [
         'src/main.py',
-        '--name=Autoshooter',
+        '--name=vampireslopvivors',
         '--onefile',
         '--windowed',
     ]
