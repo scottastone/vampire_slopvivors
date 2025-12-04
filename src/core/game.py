@@ -1,15 +1,17 @@
 import pygame
 import sys
-from player import Player
-from spawner import Spawner
-from config_loader import ConfigLoader
-from weapon import WeaponController
-from camera import Camera
-from upgrades import UpgradeManager
-from particles import ParticleSystem
-from stats import GameStats
-from state_manager import StateManager
-from entity_manager import EntityManager
+from entities.player import Player
+from entities.spawner import Spawner
+from core.config_loader import ConfigLoader
+from content.weapon import WeaponController
+from core.camera import Camera
+from content.upgrades import UpgradeManager
+from content.particles import ParticleSystem
+from core.stats import GameStats
+from core.state_manager import StateManager
+from entities.entity_manager import EntityManager
+from core.profiler import Profiler
+from core.director import Director
 
 class Game:
     def __init__(self):
@@ -36,6 +38,7 @@ class Game:
         self.state_manager = StateManager()
         self.stats = GameStats()
         self.stats.start_ticks = pygame.time.get_ticks()
+        self.profiler = Profiler()
         
         # Camera
         self.camera = Camera(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
@@ -65,8 +68,11 @@ class Game:
         self.weapon_controller.add_weapon('whip')
         self.weapon_controller.add_weapon('wand')
         
+        # Director
+        self.director = Director(self.player, self.stats)
+        
         # Spawner
-        self.spawner = Spawner(self.config_loader, self.player, self.entity_manager)
+        self.spawner = Spawner(self.config_loader, self.player, self.entity_manager, self.director)
         
         # Upgrades
         self.upgrade_manager = UpgradeManager(self.player, self.weapon_controller)
@@ -94,7 +100,7 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             
-            if self.state_manager.is_state("GAME_OVER"):
+            if self.state_manager.is_state("GAME_OVER") or self.state_manager.is_state("VICTORY"):
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:
                          self.reset_game()
@@ -109,6 +115,21 @@ class Game:
                         self.state_manager.change_state("PAUSED")
                     elif self.state_manager.is_state("PAUSED"):
                         self.state_manager.change_state("PLAYING")
+                
+                elif event.key == pygame.K_F3:
+                    self.profiler.toggle()
+                
+                # Debug Commands (Only if Profiler is enabled)
+                if self.profiler.enabled:
+                    if event.key == pygame.K_h:
+                        self.spawner.spawn_horde()
+                        print("Debug: Spawned Horde")
+                    elif event.key == pygame.K_k:
+                        self.entity_manager.kill_all_enemies()
+                        print("Debug: Killed All Enemies")
+                    elif event.key == pygame.K_i:
+                        self.player.invincible = not self.player.invincible
+                        print(f"Debug: Invincibility {'ON' if self.player.invincible else 'OFF'}")
             
             elif event.type == pygame.JOYBUTTONDOWN:
                 if event.button in [7, 9]: 
@@ -142,18 +163,29 @@ class Game:
             self.state_manager.change_state("PLAYING")
 
     def update(self):
+        self.profiler.update()
+        
         if self.state_manager.is_state("PLAYING"):
+            self.profiler.start("update")
+            self.director.update()
             self.spawner.update()
             self.weapon_controller.update()
             self.particle_system.update()
             self.entity_manager.update()
             self.camera.update(self.player)
+            self.profiler.stop("update")
             
             # Check Game Over
             if self.entity_manager.check_player_collisions():
                 self.state_manager.change_state("GAME_OVER")
                 self.stats.end_ticks = pygame.time.get_ticks()
                 print("Game Over")
+
+            # Check Victory (15 Minutes)
+            if self.stats.get_time_survived() >= 900: # 15 mins
+                self.state_manager.change_state("VICTORY")
+                self.stats.end_ticks = pygame.time.get_ticks()
+                print("Victory!")
 
             # Check Level Up (Gems)
             if self.entity_manager.check_gem_collisions():
@@ -253,6 +285,12 @@ class Game:
         kills_text = font_large.render(f"Kills: {self.stats.enemies_killed}", True, (255, 200, 200))
         self.screen.blit(kills_text, (self.SCREEN_WIDTH - kills_text.get_width() - 20, 15))
         
+        self.profiler.draw(self.screen)
+        
+        if self.player.invincible:
+            inv_text = font.render("INVINCIBLE", True, (255, 255, 0))
+            self.screen.blit(inv_text, (self.SCREEN_WIDTH // 2 - inv_text.get_width() // 2, 50))
+        
         if self.state_manager.is_state("LEVEL_UP"):
             self.upgrade_manager.draw_menu(self.screen, self.upgrade_options, self.selected_upgrade_index)
         
@@ -282,6 +320,35 @@ class Game:
                 f"Enemies Killed: {self.stats.enemies_killed}",
                 f"Damage Dealt: {self.stats.damage_dealt}",
                 f"Shots Fired: {self.stats.shots_fired}",
+                f"Level Reached: {self.player.level}"
+            ]
+            
+            y = 200
+            for line in lines:
+                text = font_stats.render(line, True, (255, 255, 255))
+                self.screen.blit(text, (self.screen.get_width()//2 - text.get_width()//2, y))
+                y += 40
+                
+            y += 50
+            restart_text = font_stats.render("Press R or Button A to Restart", True, (255, 255, 0))
+            self.screen.blit(restart_text, (self.screen.get_width()//2 - restart_text.get_width()//2, y))
+            
+        if self.state_manager.is_state("VICTORY"):
+            overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+            overlay.fill((0, 50, 0, 230))
+            self.screen.blit(overlay, (0, 0))
+            
+            font_title = pygame.font.SysFont(None, 64)
+            font_stats = pygame.font.SysFont(None, 32)
+            
+            title = font_title.render("VICTORY!", True, (255, 255, 0))
+            self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 100))
+            
+            time_survived = self.stats.get_time_survived()
+            lines = [
+                f"Time Survived: {int(time_survived//60)}:{int(time_survived%60):02d}",
+                f"Enemies Killed: {self.stats.enemies_killed}",
+                f"Damage Dealt: {self.stats.damage_dealt}",
                 f"Level Reached: {self.player.level}"
             ]
             

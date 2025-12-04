@@ -1,6 +1,6 @@
 import pygame
 import math
-from config_loader import ConfigLoader
+from core.config_loader import ConfigLoader
 
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, pos, target, config):

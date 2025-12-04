@@ -15,6 +15,7 @@ class Player(pygame.sprite.Sprite):
         self.xp = 0
         self.level = 1
         self.next_level_xp = 10
+        self.invincible = False
         self.weapons = []
         
         # Movement vector
@@ -23,11 +24,14 @@ class Player(pygame.sprite.Sprite):
         
         # Invulnerability
         self.last_hit_time = 0
-        self.iframe_duration = 500 # ms
+        self.invulnerability_duration = 500 # ms
 
     def take_damage(self, amount):
+        if self.invincible:
+            return False
+            
         current_time = pygame.time.get_ticks()
-        if current_time - self.last_hit_time > self.iframe_duration:
+        if current_time - self.last_hit_time > self.invulnerability_duration:
             self.hp -= amount
             self.last_hit_time = current_time
             print(f"Player took {amount} damage. HP: {self.hp}")
@@ -93,6 +97,8 @@ class Player(pygame.sprite.Sprite):
 
     def level_up(self):
         self.level += 1
-        self.next_level_xp = int(self.next_level_xp * 1.5)
+        # Rebalanced Curve: Linear/Quadratic instead of Exponential
+        # Old: self.next_level_xp = int(self.next_level_xp * 1.5)
+        self.next_level_xp = int(self.next_level_xp + 10 + (self.level * 5))
         print(f"Level Up! Level {self.level}")
         return True # Signal that level up happened

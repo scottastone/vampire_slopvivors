@@ -24,14 +24,56 @@ enemies:
 
   - id: goblin
     name: "Goblin"
-    hp: 15
+    hp: 20
     speed: 3.5 # Fast
     damage: 8
-    xp_value: 2
+    xp_value: 8
+    width: 24
+    height: 24
+    color: [100, 100, 100] # Grey
+    sprite: "assets/enemies/goblin.png"
+    attack_type: "melee"
+
+  - id: dire_wolf
+    name: "Dire Wolf"
+    speed: 3.5
+    hp: 20
+    damage: 8
+    color: [100, 100, 100] # Grey
+    xp_value: 8
+    width: 24
+    height: 24
+    attack_type: "melee"
+    sprite: "assets/enemies/dire_wolf.png" # Assuming a sprite for the new wolf
+
+  - id: slime
+    name: "Slime"
+    speed: 1.0
+    hp: 30
+    damage: 5
+    color: [0, 255, 0] # Green
+    xp_value: 5
     width: 28
     height: 28
-    color: [50, 200, 50] # Green
-    sprite: "assets/enemies/goblin.png"
+    attack_type: "melee"
+    split_on_death: true # Requires code support
+    sprite: "assets/enemies/slime.png" # Assuming a sprite for slime
+
+  - id: necromancer
+    name: "Necromancer"
+    speed: 1.5
+    hp: 40
+    damage: 10
+    color: [50, 0, 100] # Dark Purple
+    xp_value: 15
+    width: 32
+    height: 48
+    attack_type: "ranged"
+    attack_range: 300
+    attack_cooldown: 3000
+    projectile_speed: 4.0
+    projectile_color: [0, 255, 0] # Green fire
+    sprite: "assets/enemies/necromancer.png" # Assuming a sprite for necromancer
 
   - id: ghost
     name: "Ghost"

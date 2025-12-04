@@ -1,12 +1,13 @@
 import pygame
 import random
-from enemy import Enemy
+from entities.enemy import Enemy
 
 class Spawner:
-    def __init__(self, config_loader, player, entity_manager):
+    def __init__(self, config_loader, player, entity_manager, director=None):
         self.config_loader = config_loader
         self.player = player
         self.entity_manager = entity_manager
+        self.director = director
         self.all_sprites = entity_manager.all_sprites
         self.enemies_group = entity_manager.enemies_group
         
@@ -25,10 +26,14 @@ class Spawner:
         # Wave Definitions
         # (Start Time, End Time, Spawn Interval, [Enemy IDs])
         self.waves = [
-            {'start': 0, 'end': 60, 'interval': 40, 'enemies': ['bat', 'skeleton']},
-            {'start': 60, 'end': 120, 'interval': 30, 'enemies': ['bat', 'skeleton', 'goblin']},
-            {'start': 120, 'end': 180, 'interval': 20, 'enemies': ['skeleton', 'goblin', 'ghost']},
-            {'start': 180, 'end': 9999, 'interval': 10, 'enemies': ['goblin', 'ghost', 'tank_orc']},
+            {'time': 0, 'interval': 60, 'enemies': ['goblin']},
+            {'time': 30, 'interval': 50, 'enemies': ['goblin', 'bat']},
+            {'time': 60, 'interval': 40, 'enemies': ['goblin', 'bat', 'slime']},
+            {'time': 120, 'interval': 30, 'enemies': ['bat', 'ghost', 'slime']},
+            {'time': 180, 'interval': 25, 'enemies': ['ghost', 'orc', 'wolf']},
+            {'time': 300, 'interval': 20, 'enemies': ['orc', 'mage', 'wolf']},
+            {'time': 420, 'interval': 15, 'enemies': ['orc', 'mage', 'necromancer']},
+            {'time': 600, 'interval': 10, 'enemies': ['mage', 'necromancer', 'tank_orc']},
         ]
         
     def update(self):
@@ -38,17 +43,21 @@ class Spawner:
         self.spawn_timer += 1
         
         # Determine current wave
+        # Determine current wave
         current_wave = None
-        for wave in self.waves:
-            if self.game_time >= wave['start'] and self.game_time < wave['end']:
-                current_wave = wave
+        # Iterate backwards to find the latest wave that has started
+        for i in range(len(self.waves) - 1, -1, -1):
+            if self.game_time >= self.waves[i]['time']:
+                current_wave = self.waves[i]
                 break
                 
         if current_wave:
             interval = current_wave['interval']
             # Ramp up difficulty within wave?
-            # For now static interval per wave
-            
+            # Director Multiplier
+            if hasattr(self, 'director') and self.director: # Check if director exists and is not None
+                interval /= self.director.get_spawn_rate_multiplier()
+                
             if self.spawn_timer >= interval:
                 self.spawn_timer = 0
                 self.spawn_enemy(current_wave['enemies'])
@@ -65,7 +74,11 @@ class Spawner:
             self.boss_spawned = True
             
         # Limit total enemies
-        if len(self.enemies_group) >= 500:
+        cap = 500
+        if hasattr(self, 'director') and self.director: # Check if director exists and is not None
+            cap *= self.director.get_enemy_cap_multiplier()
+            
+        if len(self.enemies_group) >= cap:
             return
 
     def spawn_horde(self):

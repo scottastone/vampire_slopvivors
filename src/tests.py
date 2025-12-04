@@ -1,9 +1,9 @@
 import unittest
 import pygame
-from player import Player
-from enemy import Enemy
-from spawner import Spawner
-from config_loader import ConfigLoader
+from entities.player import Player
+from entities.enemy import Enemy
+from entities.spawner import Spawner
+from core.config_loader import ConfigLoader
 
 # Mock pygame
 pygame.init()
@@ -60,7 +60,7 @@ class TestEnemy(unittest.TestCase):
 
 class TestGameStats(unittest.TestCase):
     def test_time_survived(self):
-        from stats import GameStats
+        from core.stats import GameStats
         stats = GameStats()
         stats.start_ticks = 1000
         stats.end_ticks = 0

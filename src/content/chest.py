@@ -1,3 +1,4 @@
+from core.config_loader import ConfigLoader
 import pygame
 
 class Chest(pygame.sprite.Sprite):

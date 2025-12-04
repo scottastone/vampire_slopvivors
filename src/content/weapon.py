@@ -1,5 +1,5 @@
 import pygame
-from projectile import Projectile, MeleeHitbox, AxeProjectile, AuraHitbox
+from content.projectile import Projectile, MeleeHitbox, AxeProjectile, AuraHitbox
 
 class WeaponController:
     def __init__(self, player, entity_manager, config_loader, stats):

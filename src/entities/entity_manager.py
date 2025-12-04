@@ -1,8 +1,8 @@
 import pygame
 import random
-from chest import Chest
-from items import Vacuum, Heart
-from gem import Gem
+from content.chest import Chest
+from content.items import Vacuum, Heart
+from content.gem import Gem
 
 class EntityManager:
     def __init__(self, player, stats, particle_system):
@@ -21,6 +21,18 @@ class EntityManager:
         
         # Add player to all_sprites
         self.all_sprites.add(self.player)
+
+    def kill_all_enemies(self):
+        for enemy in self.enemies_group:
+            enemy.kill()
+        self.enemies_group.empty()
+
+    def spawn_enemy(self, enemy):
+        self.all_sprites.add(enemy)
+        self.enemies_group.add(enemy)
+        
+    def add_enemy(self, enemy):
+        self.spawn_enemy(enemy)
 
     def reset(self):
         self.all_sprites.empty()

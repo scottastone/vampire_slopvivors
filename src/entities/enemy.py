@@ -1,5 +1,5 @@
 import pygame
-from config_loader import ConfigLoader
+from core.config_loader import ConfigLoader
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos, enemy_id, config_data, player, entity_manager=None):
@@ -41,13 +41,18 @@ class Enemy(pygame.sprite.Sprite):
         # Ghosts ignore separation (or have very low weight) to stack
         is_ghost = self.config.get('type') == 'ghost'
         
-        if enemies_group and not is_ghost:
+        # Optimization: Only run separation logic every 5 frames, staggered by ID
+        # We store the last calculated separation vector to use in between frames
+        if not hasattr(self, 'last_separation'):
+            self.last_separation = pygame.math.Vector2(0, 0)
+            
+        # Use id hash to stagger
+        should_update_separation = (pygame.time.get_ticks() // 16 + hash(self)) % 5 == 0
+        
+        if enemies_group and not is_ghost and should_update_separation:
             # Check for collisions with other enemies
             # Using a smaller rect for collision to allow some overlap but push center
-            hit_rect = self.rect.inflate(-5, -5)
             # We can't pass a rect to spritecollide, so we rely on self.rect
-            # Optim: limit check? No, let's try raw spritecollide first.
-            # To avoid N^2 every frame, maybe random skip?
             neighbors = pygame.sprite.spritecollide(self, enemies_group, False)
             count = 0
             for neighbor in neighbors:
@@ -61,6 +66,10 @@ class Enemy(pygame.sprite.Sprite):
             
             if count > 0:
                  separation_vector = separation_vector / count
+            
+            self.last_separation = separation_vector
+        else:
+            separation_vector = getattr(self, 'last_separation', pygame.math.Vector2(0, 0))
                  
         # Combine vectors
         # Chase weight: 1.0, Separation weight: 20.0 (needs to be strong when close)
@@ -87,7 +96,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.shoot_projectile()
 
     def shoot_projectile(self):
-        from projectile import EnemyProjectile
+        from content.projectile import EnemyProjectile
         proj = EnemyProjectile(self.rect.center, self.player.rect.center, self.config.get('damage', 10))
         self.entity_manager.all_sprites.add(proj)
         self.entity_manager.enemy_projectiles_group.add(proj)
@@ -96,6 +105,35 @@ class Enemy(pygame.sprite.Sprite):
         self.hp -= amount
         if self.hp <= 0:
             self.hp = 0
+            
+            # Slime Split Logic
+            if self.config.get('split_on_death', False) and self.entity_manager:
+                # Spawn 2 smaller slimes
+                # We need to manually spawn them via spawner or entity manager
+                # Since we don't have direct access to spawner here, we can hack it or add a method to entity_manager
+                # Let's try to access spawner via entity_manager if possible, or just create Enemy instances
+                
+                # Actually, we can just create new Enemy instances and add them
+                # But we need the 'slime_small' config. 
+                # For simplicity, let's just spawn 'goblin' as a placeholder for small slime if we don't have a config
+                # Or better, let's just make them smaller versions of self
+                
+                for _ in range(2):
+                    # Create a mini-config based on self.config
+                    mini_config = self.config.copy()
+                    mini_config['hp'] = self.config['hp'] // 2
+                    mini_config['width'] = self.config['width'] // 1.5
+                    mini_config['height'] = self.config['height'] // 1.5
+                    mini_config['split_on_death'] = False # Prevent infinite recursion
+                    mini_config['xp_value'] = 1
+                    
+                    # Offset position slightly
+                    import random
+                    offset = pygame.math.Vector2(random.randint(-10, 10), random.randint(-10, 10))
+                    
+                    new_slime = Enemy(self.pos + offset, "small_slime", mini_config, self.player, self.entity_manager)
+                    self.entity_manager.add_enemy(new_slime)
+
             self.kill()
             return True # Dead
         return False
